@@ -9,7 +9,7 @@ phases:
   build:
     commands:
       - echo "Build phase started..."
-      # Grant execute permissions to the scripts located in the 'scripts' subdirectory
+      # Grant execute permissions to the scripts located in the 'scripts' subdirectory in the build environment
       - chmod +x scripts/install_dependencies.sh
       - chmod +x scripts/start_app.sh
       - chmod +x scripts/stop_app.sh
@@ -21,8 +21,6 @@ artifacts:
     - 'requirements.txt'
     - 'bashscript.txt'
     - 'appspec.yml'
-    # List the scripts directly, as they are flattened to the root of the artifact by CodeBuild's packaging
-    - 'install_dependencies.sh'
-    - 'start_app.sh'
-    - 'stop_app.sh'
-  discard-paths: yes
+    # Include the entire scripts directory, preserving its path
+    - 'scripts/**/*' # This means all files within the 'scripts' directory will be included with their 'scripts/' prefix in the artifact
+  discard-paths: no # Crucial: This ensures the 'scripts/' directory structure is preserved in the artifact
