@@ -7,12 +7,12 @@ hooks:
   BeforeInstall:
     - location: scripts/install_dependencies.sh # CHANGE THIS BACK! Look in 'scripts/' folder
       timeout: 300
-      runas: root
+      runas: ec2-user
   ApplicationStart:
     - location: scripts/start_app.sh           # CHANGE THIS BACK! Look in 'scripts/' folder
       timeout: 60
-      runas: root
+      runas: ec2-user
   ApplicationStop:
     - location: scripts/stop_app.sh            # CHANGE THIS BACK! Look in 'scripts/' folder
       timeout: 60
-      runas: root
+      runas: ec2-user
