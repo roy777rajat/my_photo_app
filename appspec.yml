@@ -1,0 +1,27 @@
+version: 0.0
+os: linux
+files:
+  - source: / # This means "all files from the root of the deployment package"
+    destination: /home/ec2-user/my_photo_app # Deploy them to this directory on the EC2 instance
+
+hooks:
+  # This hook runs before the new application revision is copied to the instance.
+  # We stop the app to ensure no old processes interfere.
+  BeforeInstall:
+    - location: scripts/stop_app.sh
+      timeout: 60
+      runas: root # This script needs root privileges for systemctl
+
+  # This hook runs after the application revision is copied.
+  # We install dependencies here as the new code is now in place.
+  AfterInstall:
+    - location: scripts/install_dependencies.sh
+      timeout: 300 # Give enough time for pip install
+      runas: ec2-user # This script needs to run as ec2-user to access the virtual environment
+
+  # This hook runs after the new code is in place and dependencies are handled.
+  # We start the application service here.
+  ApplicationStart:
+    - location: scripts/start_app.sh
+      timeout: 60
+      runas: root # This script needs root privileges for systemctl
