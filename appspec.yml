@@ -1,18 +1,18 @@
 version: 0.0
 os: linux
 files:
-  - source: / # Deploy all files from the root of the artifact
-    destination: /home/ec2-user/my_photo_app # Or your target deployment directory (ensure this path is correct for your EC2 instance)
+  - source: / 
+    destination: /home/ec2-user/my_photo_app 
 hooks:
   BeforeInstall:
-    - location: scripts/install_dependencies.sh # CHANGE THIS BACK! Look in 'scripts/' folder
+    - location: scripts/install_dependencies.sh 
       timeout: 300
-      runas: ec2-user
+      runas: ec2-user 
   ApplicationStart:
-    - location: scripts/start_app.sh           # CHANGE THIS BACK! Look in 'scripts/' folder
+    - location: scripts/start_app.sh 
       timeout: 60
       runas: ec2-user
   ApplicationStop:
-    - location: scripts/stop_app.sh            # CHANGE THIS BACK! Look in 'scripts/' folder
+    - location: scripts/stop_app.sh
       timeout: 60
       runas: ec2-user

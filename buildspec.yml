@@ -12,8 +12,7 @@ phases:
       # Install Python dependencies into the virtual environment
       - pip install -r requirements.txt
       - echo "Python dependencies installed in virtual environment."
-      # Remove the 'deactivate' command as it's not strictly necessary and causes an error
-      #- deactivate 
+      # Deactivate is not needed here as the shell context ends.
       
   build:
     commands:
@@ -22,6 +21,11 @@ phases:
       - chmod +x scripts/install_dependencies.sh
       - chmod +x scripts/start_app.sh
       - chmod +x scripts/stop_app.sh
+      # Ensure permissions for .venv directories/files within the artifact
+      # These commands make sure the files inside .venv are readable and executable
+      # by the ec2-user after deployment.
+      - find .venv -type f -exec chmod 644 {} + # Make files readable
+      - find .venv -type d -exec chmod 755 {} + # Make directories traversable
 artifacts:
   files:
     - 'app.py'
@@ -33,4 +37,4 @@ artifacts:
     - 'scripts/**/*'
     # Include the entire virtual environment directory in the artifact
     - '.venv/**/*' 
-  discard-paths: no
+  discard-paths: no # Ensure 'scripts/' and '.venv/' paths are preserved in the artifact
