@@ -8,4 +8,4 @@ DYNAMODB_TABLE_NAME = "FamilyPhotoMetadata" # <<< REPLACE WITH YOUR DYNAMODB TAB
 
 # --- AWS Region ---
 # Ensure this matches the region where your S3 bucket and DynamoDB table are created
-AWS_REGION = "eu-west-2" # <<< REPLACE WITH YOUR AWS REGION (e.g., 'us-east-1', 'ap-southeast-2')
+AWS_REGION = "eu-west-1" # <<< REPLACE WITH YOUR AWS REGION (e.g., 'us-east-1', 'ap-southeast-2')
