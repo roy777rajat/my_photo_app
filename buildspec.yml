@@ -1,0 +1,35 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      # Optional: Add any commands to install dependencies if your app needs them
+      # For example:
+      # - pip install -r requirements.txt
+      - echo "No specific install phase commands needed for this simple app"
+  build:
+    commands:
+      # Optional: Add any build commands if you need to compile code, etc.
+      - echo "No specific build phase commands needed for this simple app"
+  post_build:
+    commands:
+      - echo "Creating deployment package for CodeDeploy..."
+      # Create a temporary directory to package your application
+      - mkdir build_output
+      # Copy appspec.yml to the root of your deployment package
+      - cp appspec.yml build_output/appspec.yml
+      # Copy your application files (adjust these paths if your files are in subdirectories)
+      - cp app.py build_output/app.py
+      - cp aws_utils.py build_output/aws_utils.py
+      - cp config.py build_output/config.py
+      - cp requirements.txt build_output/requirements.txt
+      - cp bashscript.txt build_output/bashscript.txt
+      # Copy the entire scripts directory and its contents
+      - cp -R scripts/ build_output/scripts/
+      - ls -l build_output/ # Just to verify contents in logs
+      - ls -l build_output/scripts/ # Just to verify contents in logs
+
+artifacts:
+  files:
+    - '**/*'  # This tells CodeBuild to include all files in the 'base-directory'
+  base-directory: build_output # This specifies the directory to zip up
+  discard-paths: yes # This ensures the zip contains only the contents of build_output, not 'build_output/' as a parent folder inside the zip.
