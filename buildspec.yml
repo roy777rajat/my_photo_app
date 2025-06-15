@@ -1,35 +1,23 @@
 version: 0.2
 phases:
   install:
+    runtime-versions:
+      python: 3.11 # Ensure this matches your project's Python version
     commands:
-      # Optional: Add any commands to install dependencies if your app needs them
-      # For example:
-      # - pip install -r requirements.txt
-      - echo "No specific install phase commands needed for this simple app"
+      - echo "Installing dependencies..."
+      - pip install -r requirements.txt --target . # Install to current directory
   build:
     commands:
-      # Optional: Add any build commands if you need to compile code, etc.
-      - echo "No specific build phase commands needed for this simple app"
-  post_build:
-    commands:
-      - echo "Creating deployment package for CodeDeploy..."
-      # Create a temporary directory to package your application
-      - mkdir build_output
-      # Copy appspec.yml to the root of your deployment package
-      - cp appspec.yml build_output/appspec.yml
-      # Copy your application files (adjust these paths if your files are in subdirectories)
-      - cp app.py build_output/app.py
-      - cp aws_utils.py build_output/aws_utils.py
-      - cp config.py build_output/config.py
-      - cp requirements.txt build_output/requirements.txt
-      - cp bashscript.txt build_output/bashscript.txt
-      # Copy the entire scripts directory and its contents
-      - cp -R scripts/ build_output/scripts/
-      - ls -l build_output/ # Just to verify contents in logs
-      - ls -l build_output/scripts/ # Just to verify contents in logs
-
+      - echo "Build phase started..."
+      # No explicit build commands needed if just packaging existing files
 artifacts:
   files:
-    - '**/*'  # This tells CodeBuild to include all files in the 'base-directory'
-  base-directory: build_output # This specifies the directory to zip up
-  discard-paths: yes # This ensures the zip contains only the contents of build_output, not 'build_output/' as a parent folder inside the zip.
+    - 'app.py'
+    - 'aws_utils.py'
+    - 'config.py'
+    - 'requirements.txt'
+    - 'bashscript.txt'
+    - 'appspec.yml'
+    - 'scripts/**/*' # This captures all files within the scripts directory and its subdirectories
+  discard-paths: yes # THIS IS CRITICAL. It puts all listed files/folders directly at the root of the ZIP.
+  # base-directory: build_output # REMOVE THIS IF IT'S PRESENT IN YOUR ARTIFACTS SECTION
