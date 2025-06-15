@@ -1,0 +1,163 @@
+#!/bin/bash
+exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+echo "Starting user data script for Streamlit Family Photo App deployment..."
+
+# --- Configuration Variables ---
+# Define the application directory
+APP_DIR="/home/ec2-user/my_photo_app"
+# Define your GitHub repository URL
+REPO_URL="YOUR_GITHUB_REPO_URL" # E.g., https://github.com/your-username/my_photo_app.git
+
+# AWS Resource Names (REPLACE THESE PLACEHOLDERS WITH YOUR ACTUAL VALUES)
+S3_BUCKET="YOUR_S3_BUCKET_NAME"
+DYNAMODB_TABLE="YOUR_DYNAMODB_TABLE_NAME"
+AWS_REGION="YOUR_AWS_REGION" # E.g., eu-west-1, us-east-1, us-west-2
+
+# --- System Updates and Dependency Installation ---
+echo "Updating system packages and installing required software..."
+yum update -y
+yum install -y git python3-pip python3.9-venv nginx
+
+# --- Application Setup as ec2-user ---
+echo "Creating and setting up application directory: $APP_DIR"
+mkdir -p "$APP_DIR"
+# Ensure the application directory is owned by ec2-user from the start
+chown -R ec2-user:ec2-user "$APP_DIR"
+
+# Execute application-specific tasks as the 'ec2-user'
+# This ensures correct permissions for venv, pip installs, etc.
+sudo -u ec2-user bash -c "
+    echo 'Navigating to application directory...'
+    cd '$APP_DIR' || { echo 'ERROR: Failed to change directory to $APP_DIR. Exiting.'; exit 1; }
+
+    echo 'Cloning application repository from $REPO_URL...'
+    # Use --single-branch and --depth 1 for faster cloning if only master/main branch is needed
+    git clone --single-branch --depth 1 '$REPO_URL' . || { echo 'ERROR: Failed to clone repository. Exiting.'; exit 1; }
+    echo 'Repository cloned successfully.'
+
+    echo 'Creating config.py file with AWS resource details...'
+    # This creates the config.py file that was intentionally not pushed to Git
+    cat <<EOF > config.py
+S3_BUCKET_NAME = \"$S3_BUCKET\"
+DYNAMODB_TABLE_NAME = \"$DYNAMODB_TABLE\"
+AWS_REGION = \"$AWS_REGION\"
+EOF
+    echo 'config.py created.'
+
+    echo 'Creating Python virtual environment...'
+    python3 -m venv .venv || { echo 'ERROR: Failed to create virtual environment. Exiting.'; exit 1; }
+    echo 'Virtual environment created.'
+
+    echo 'Activating virtual environment...'
+    source .venv/bin/activate || { echo 'ERROR: Failed to activate virtual environment. Exiting.'; exit 1; }
+    echo 'Virtual environment activated.'
+
+    echo 'Installing Python dependencies from requirements.txt...'
+    pip install -r requirements.txt || { echo 'ERROR: Failed to install Python dependencies. Exiting.'; exit 1; }
+    echo 'Python dependencies installed successfully.'
+
+    echo 'Deactivating virtual environment...'
+    deactivate # Deactivate for the current sub-shell
+" || { echo 'ERROR: Application setup (as ec2-user) failed. Exiting main script.'; exit 1; }
+
+# --- Systemd Service Setup (as root) ---
+echo "Setting up Systemd service for Streamlit application..."
+cat <<EOF > /etc/systemd/system/streamlit_app.service
+[Unit]
+Description=Streamlit Family Photo App
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=$APP_DIR
+# Adjust ExecStart command as needed for your app (e.g., if app.py is in a subfolder)
+ExecStart=$APP_DIR/.venv/bin/streamlit run $APP_DIR/app.py --server.port 8501 --server.enableCORS false --server.enableXsrfProtection false
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "Reloading systemd daemon, enabling and starting Streamlit service..."
+systemctl daemon-reload
+systemctl enable streamlit_app
+systemctl start streamlit_app
+echo "Streamlit service enabled and started."
+
+# --- Nginx Setup (as root) ---
+echo "Setting up Nginx as a reverse proxy..."
+# Remove default Nginx configurations to avoid conflicts
+rm -f /etc/nginx/nginx.conf
+rm -f /etc/nginx/conf.d/default.conf
+
+# Create a new, clean Nginx configuration file
+cat <<EOF > /etc/nginx/nginx.conf
+user nginx;
+worker_processes auto;
+error_log /var/log/nginx/error.log;
+pid /run/nginx.pid;
+
+include /usr/share/nginx/modules/*.conf;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+
+    sendfile            on;
+    tcp_nopush          on;
+    keepalive_timeout   65;
+    types_hash_max_size 2048;
+
+    include             /etc/nginx/mime.types;
+    default_type        application/octet-stream;
+
+    # Load modular configuration files from the /etc/nginx/conf.d directory.
+    include /etc/nginx/conf.d/*.conf;
+
+    server {
+        listen       80 default_server;
+        listen       [::]:80 default_server;
+        server_name  _;
+        root         /usr/share/nginx/html;
+
+        # Load configuration files for the default server block.
+        include /etc/nginx/default.d/*.conf;
+
+        location / {
+            # Proxy requests to the Streamlit app running on localhost:8501
+            proxy_pass http://localhost:8501;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+            # Add these headers for Streamlit's websocket communication
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade \$http_upgrade;
+            proxy_set_header Connection "upgrade";
+        }
+
+        # Basic error pages
+        error_page 404 /404.html;
+            location = /40x.html {
+        }
+        error_page 500 502 503 504 /50x.html;
+            location = /50x.html {
+        }
+    }
+}
+EOF
+
+echo "Restarting and enabling Nginx service..."
+systemctl restart nginx
+systemctl enable nginx
+echo "Nginx setup complete."
+
+echo "User data script finished successfully. Application should be accessible via Public IP."
