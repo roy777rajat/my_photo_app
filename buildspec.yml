@@ -8,12 +8,12 @@ phases:
       # Create a virtual environment named .venv
       - python3 -m venv .venv 
       # Activate the virtual environment using the portable '.' command
-      - . .venv/bin/activate # <--- CHANGE THIS LINE
+      - . .venv/bin/activate 
       # Install Python dependencies into the virtual environment
       - pip install -r requirements.txt
       - echo "Python dependencies installed in virtual environment."
-      # Deactivate the virtual environment (optional, but good practice in build scripts)
-      - deactivate
+      # Remove the 'deactivate' command as it's not strictly necessary and causes an error
+      #- deactivate 
       
   build:
     commands:
