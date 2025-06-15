@@ -8,11 +8,6 @@ APP_DIR="/home/ec2-user/my_photo_app"
 # Define your GitHub repository URL
 REPO_URL="YOUR_GITHUB_REPO_URL" # E.g., https://github.com/your-username/my_photo_app.git
 
-# AWS Resource Names (REPLACE THESE PLACEHOLDERS WITH YOUR ACTUAL VALUES)
-S3_BUCKET="YOUR_S3_BUCKET_NAME"
-DYNAMODB_TABLE="YOUR_DYNAMODB_TABLE_NAME"
-AWS_REGION="YOUR_AWS_REGION" # E.g., eu-west-1, us-east-1, us-west-2
-
 # --- System Updates and Dependency Installation ---
 echo "Updating system packages and installing required software..."
 yum update -y
@@ -22,6 +17,7 @@ yum install -y git python3-pip python3.9-venv nginx
 echo "Creating and setting up application directory: $APP_DIR"
 mkdir -p "$APP_DIR"
 # Ensure the application directory is owned by ec2-user from the start
+# This prevents 'Permission denied' errors for 'ec2-user' operations
 chown -R ec2-user:ec2-user "$APP_DIR"
 
 # Execute application-specific tasks as the 'ec2-user'
@@ -33,16 +29,7 @@ sudo -u ec2-user bash -c "
     echo 'Cloning application repository from $REPO_URL...'
     # Use --single-branch and --depth 1 for faster cloning if only master/main branch is needed
     git clone --single-branch --depth 1 '$REPO_URL' . || { echo 'ERROR: Failed to clone repository. Exiting.'; exit 1; }
-    echo 'Repository cloned successfully.'
-
-    echo 'Creating config.py file with AWS resource details...'
-    # This creates the config.py file that was intentionally not pushed to Git
-    cat <<EOF > config.py
-S3_BUCKET_NAME = \"$S3_BUCKET\"
-DYNAMODB_TABLE_NAME = \"$DYNAMODB_TABLE\"
-AWS_REGION = \"$AWS_REGION\"
-EOF
-    echo 'config.py created.'
+    echo 'Repository cloned successfully (including config.py).'
 
     echo 'Creating Python virtual environment...'
     python3 -m venv .venv || { echo 'ERROR: Failed to create virtual environment. Exiting.'; exit 1; }
