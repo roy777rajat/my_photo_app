@@ -10,9 +10,10 @@ phases:
     commands:
       - echo "Build phase started..."
       # Add this line to ensure scripts are executable before they are packaged into the artifact
-      - chmod +x install_dependencies.sh # Now at root of artifact
-      - chmod +x start_app.sh           # Now at root of artifact
-      - chmod +x stop_app.sh            # Now at root of artifact
+      # Refer to them by their path relative to the root of the cloned repo
+      - chmod +x scripts/install_dependencies.sh
+      - chmod +x scripts/start_app.sh
+      - chmod +x scripts/stop_app.sh
 artifacts:
   files:
     - 'app.py'
@@ -21,9 +22,8 @@ artifacts:
     - 'requirements.txt'
     - 'bashscript.txt'
     - 'appspec.yml'
-    - 'install_dependencies.sh' # Explicitly list these as they are at the root of the artifact
+    # List the scripts directly, as they are flattened to the root of the artifact
+    - 'install_dependencies.sh'
     - 'start_app.sh'
     - 'stop_app.sh'
-    # No need for 'scripts/**/*' if the scripts folder is empty or not used for these 3 scripts
-    # and other files inside it (if any) are explicitly listed or are not critical.
   discard-paths: yes
