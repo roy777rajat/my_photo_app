@@ -4,11 +4,8 @@ phases:
     runtime-versions:
       python: 3.11
     commands:
-      - echo "Installing dependencies..."
-      - python3 -m venv .venv 
-      - . .venv/bin/activate 
-      - pip install -r requirements.txt
-      - echo "Python dependencies installed in virtual environment."
+      # No longer installing dependencies or creating venv in CodeBuild
+      - echo "Skipping Python dependency installation in CodeBuild. This will happen on EC2."
       
   build:
     commands:
@@ -17,11 +14,8 @@ phases:
       - chmod +x scripts/install_dependencies.sh
       - chmod +x scripts/start_app.sh
       - chmod +x scripts/stop_app.sh
-      - chmod +x scripts/setup_deployment_dir.sh # <-- NEW SCRIPT
+      - chmod +x scripts/setup_deployment_dir.sh # Keep this one
 
-      # Ensure permissions for .venv directories/files
-      - find .venv -type f -exec chmod 644 {} + 
-      - find .venv -type d -exec chmod 755 {} + 
 artifacts:
   files:
     - 'app.py'
@@ -30,6 +24,6 @@ artifacts:
     - 'requirements.txt'
     - 'bashscript.txt'
     - 'appspec.yml'
-    - 'scripts/**/*'
-    - '.venv/**/*'   
+    - 'scripts/**/*' # This will include all scripts, including the new setup_deployment_dir.sh
+    # Removed: - '.venv/**/*' 
   discard-paths: no
