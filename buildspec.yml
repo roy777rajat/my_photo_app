@@ -2,22 +2,22 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      python: 3.11 # Ensure this matches your project's Python version
+      python: 3.11
     commands:
       - echo "Installing dependencies..."
-      - pip install -r requirements.txt --target . # Install to current directory
+      - pip install -r requirements.txt --target .
   build:
     commands:
       - echo "Build phase started..."
-      # No explicit build commands needed if just packaging existing files
+      # Add this line to ensure scripts are executable WITHIN the build environment before packaging
+      - chmod +x scripts/*.sh # This is also good practice for CodeDeploy
 artifacts:
   files:
     - 'app.py'
     - 'aws_utils.py'
     - 'config.py'
     - 'requirements.txt'
-    - 'bashscript.txt'
+    - 'bashscript.txt' # Keep this here if it's meant to be at the root of the artifact
     - 'appspec.yml'
     - 'scripts/**/*' # This captures all files within the scripts directory and its subdirectories
-  discard-paths: yes # THIS IS CRITICAL. It puts all listed files/folders directly at the root of the ZIP.
-  # base-directory: build_output # REMOVE THIS IF IT'S PRESENT IN YOUR ARTIFACTS SECTION
+  discard-paths: yes
