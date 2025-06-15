@@ -5,11 +5,21 @@ phases:
       python: 3.11
     commands:
       - echo "Installing dependencies..."
-      - pip install -r requirements.txt --target .
+      # Create and activate a virtual environment
+      - python3 -m venv .venv # Create a virtual environment named .venv
+      - source .venv/bin/activate # Activate the virtual environment
+
+      # Install Python dependencies into the virtual environment
+      - pip install -r requirements.txt
+      - echo "Python dependencies installed in virtual environment."
+
+      # Deactivate the virtual environment (optional, but good practice in build scripts)
+      - deactivate
+      
   build:
     commands:
       - echo "Build phase started..."
-      # Grant execute permissions to the scripts located in the 'scripts' subdirectory in the build environment
+      # Grant execute permissions to the scripts located in the 'scripts' subdirectory
       - chmod +x scripts/install_dependencies.sh
       - chmod +x scripts/start_app.sh
       - chmod +x scripts/stop_app.sh
@@ -21,6 +31,7 @@ artifacts:
     - 'requirements.txt'
     - 'bashscript.txt'
     - 'appspec.yml'
-    # Include the entire scripts directory, preserving its path
-    - 'scripts/**/*' # This means all files within the 'scripts' directory will be included with their 'scripts/' prefix in the artifact
-  discard-paths: no # Crucial: This ensures the 'scripts/' directory structure is preserved in the artifact
+    - 'scripts/**/*'
+    # Include the entire virtual environment directory in the artifact
+    - '.venv/**/*' 
+  discard-paths: no # Ensure 'scripts/' and '.venv/' paths are preserved in the artifact
