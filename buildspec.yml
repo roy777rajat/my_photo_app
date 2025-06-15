@@ -9,8 +9,7 @@ phases:
   build:
     commands:
       - echo "Build phase started..."
-      # Add this line to ensure scripts are executable before they are packaged into the artifact
-      # Refer to them by their path relative to the root of the cloned repo
+      # Grant execute permissions to the scripts located in the 'scripts' subdirectory
       - chmod +x scripts/install_dependencies.sh
       - chmod +x scripts/start_app.sh
       - chmod +x scripts/stop_app.sh
@@ -22,7 +21,7 @@ artifacts:
     - 'requirements.txt'
     - 'bashscript.txt'
     - 'appspec.yml'
-    # List the scripts directly, as they are flattened to the root of the artifact
+    # List the scripts directly, as they are flattened to the root of the artifact by CodeBuild's packaging
     - 'install_dependencies.sh'
     - 'start_app.sh'
     - 'stop_app.sh'
