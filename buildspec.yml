@@ -1,23 +1,10 @@
 version: 0.2
 phases:
-  install:
-    runtime-versions:
-      python: 3.11
-    commands:
-      - echo "Installing dependencies..."
-      - pip install -r requirements.txt --target .
   build:
     commands:
-      - echo "Build phase started..."
-      # Add this line to ensure scripts are executable WITHIN the build environment before packaging
-      - chmod +x scripts/*.sh # This is also good practice for CodeDeploy
+      - echo "Minimal build test"
 artifacts:
   files:
-    - 'app.py'
-    - 'aws_utils.py'
-    - 'config.py'
-    - 'requirements.txt'
-    - 'bashscript.txt' # Keep this here if it's meant to be at the root of the artifact
     - 'appspec.yml'
-    - 'scripts/**/*' # This captures all files within the scripts directory and its subdirectories
+    - 'scripts/**/*'
   discard-paths: yes
