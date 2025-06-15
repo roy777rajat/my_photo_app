@@ -1,10 +1,29 @@
 version: 0.2
 phases:
+  install:
+    runtime-versions:
+      python: 3.11
+    commands:
+      - echo "Installing dependencies..."
+      - pip install -r requirements.txt --target .
   build:
     commands:
-      - echo "Minimal build test"
+      - echo "Build phase started..."
+      # Add this line to ensure scripts are executable before they are packaged into the artifact
+      - chmod +x install_dependencies.sh # Now at root of artifact
+      - chmod +x start_app.sh           # Now at root of artifact
+      - chmod +x stop_app.sh            # Now at root of artifact
 artifacts:
   files:
+    - 'app.py'
+    - 'aws_utils.py'
+    - 'config.py'
+    - 'requirements.txt'
+    - 'bashscript.txt'
     - 'appspec.yml'
-    - 'scripts/**/*'
+    - 'install_dependencies.sh' # Explicitly list these as they are at the root of the artifact
+    - 'start_app.sh'
+    - 'stop_app.sh'
+    # No need for 'scripts/**/*' if the scripts folder is empty or not used for these 3 scripts
+    # and other files inside it (if any) are explicitly listed or are not critical.
   discard-paths: yes
