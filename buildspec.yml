@@ -5,36 +5,48 @@ phases:
       python: 3.11
     commands:
       - echo "Installing dependencies..."
-      # Create a virtual environment named .venv
+      # Create a virtual environment
       - python3 -m venv .venv 
-      # Activate the virtual environment using the portable '.' command
+      # Activate the virtual environment
       - . .venv/bin/activate 
       # Install Python dependencies into the virtual environment
       - pip install -r requirements.txt
       - echo "Python dependencies installed in virtual environment."
-      # Deactivate is not needed here as the shell context ends.
       
   build:
     commands:
       - echo "Build phase started..."
-      # Grant execute permissions to the scripts located in the 'scripts' subdirectory
-      - chmod +x scripts/install_dependencies.sh
-      - chmod +x scripts/start_app.sh
-      - chmod +x scripts/stop_app.sh
-      # Ensure permissions for .venv directories/files within the artifact
+      # Create a deployment package directory
+      - mkdir deployment_package
+      
+      # Copy application files to the deployment package
+      - cp app.py deployment_package/
+      - cp aws_utils.py deployment_package/
+      - cp config.py deployment_package/
+      - cp requirements.txt deployment_package/
+      - cp bashscript.txt deployment_package/
+      - cp appspec.yml deployment_package/
+
+      # Copy the entire scripts directory into the deployment package
+      - cp -r scripts deployment_package/
+
+      # Copy the entire .venv directory into the deployment package
+      - cp -r .venv deployment_package/ 
+
+      # Grant execute permissions to the scripts AFTER copying them to deployment_package/scripts/
+      # This ensures permissions are set on the files that will be in the artifact.
+      - chmod +x deployment_package/scripts/install_dependencies.sh
+      - chmod +x deployment_package/scripts/start_app.sh
+      - chmod +x deployment_package/scripts/stop_app.sh
+
+      # Ensure permissions for .venv directories/files inside deployment_package/.venv
       # These commands make sure the files inside .venv are readable and executable
       # by the ec2-user after deployment.
-      - find .venv -type f -exec chmod 644 {} + # Make files readable
-      - find .venv -type d -exec chmod 755 {} + # Make directories traversable
+      - find deployment_package/.venv -type f -exec chmod 644 {} + # Make files readable
+      - find deployment_package/.venv -type d -exec chmod 755 {} + # Make directories traversable
+
 artifacts:
   files:
-    - 'app.py'
-    - 'aws_utils.py'
-    - 'config.py'
-    - 'requirements.txt'
-    - 'bashscript.txt'
-    - 'appspec.yml'
-    - 'scripts/**/*'
-    # Include the entire virtual environment directory in the artifact
-    - '.venv/**/*' 
-  discard-paths: no # Ensure 'scripts/' and '.venv/' paths are preserved in the artifact
+    - '**/*' # Include everything inside the base-directory
+  base-directory: deployment_package # Point CodeBuild to the created directory
+  discard-paths: yes # This is redundant with base-directory but harmless
