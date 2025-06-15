@@ -5,9 +5,12 @@ files:
     destination: /home/ec2-user/my_photo_app 
 hooks:
   BeforeInstall:
+    - location: scripts/setup_deployment_dir.sh # <-- NEW SCRIPT
+      timeout: 60
+      runas: root # Run as root to ensure directory creation/ownership
     - location: scripts/install_dependencies.sh 
       timeout: 300
-      runas: ec2-user 
+      runas: ec2-user # This remains ec2-user as your script expects
   ApplicationStart:
     - location: scripts/start_app.sh 
       timeout: 60

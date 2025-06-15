@@ -5,28 +5,23 @@ phases:
       python: 3.11
     commands:
       - echo "Installing dependencies..."
-      # Create a virtual environment
       - python3 -m venv .venv 
-      # Activate the virtual environment
       - . .venv/bin/activate 
-      # Install Python dependencies into the virtual environment
       - pip install -r requirements.txt
       - echo "Python dependencies installed in virtual environment."
       
   build:
     commands:
       - echo "Build phase started..."
-      # Grant execute permissions to the scripts located in the 'scripts' subdirectory
+      # Grant execute permissions to all scripts in the 'scripts' subdirectory
       - chmod +x scripts/install_dependencies.sh
       - chmod +x scripts/start_app.sh
       - chmod +x scripts/stop_app.sh
+      - chmod +x scripts/setup_deployment_dir.sh # <-- NEW SCRIPT
 
       # Ensure permissions for .venv directories/files
-      # These commands make sure the files inside .venv are readable and executable
-      # by the ec2-user after deployment.
-      - find .venv -type f -exec chmod 644 {} + # Make files readable
-      - find .venv -type d -exec chmod 755 {} + # Make directories traversable
-
+      - find .venv -type f -exec chmod 644 {} + 
+      - find .venv -type d -exec chmod 755 {} + 
 artifacts:
   files:
     - 'app.py'
@@ -35,6 +30,6 @@ artifacts:
     - 'requirements.txt'
     - 'bashscript.txt'
     - 'appspec.yml'
-    - 'scripts/**/*' # This correctly puts scripts/ into the artifact
-    - '.venv/**/*'   # This should put .venv/ into the artifact
-  discard-paths: no # Ensure paths are preserved in the artifact
+    - 'scripts/**/*'
+    - '.venv/**/*'   
+  discard-paths: no
