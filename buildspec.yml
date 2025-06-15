@@ -5,14 +5,13 @@ phases:
       python: 3.11
     commands:
       - echo "Installing dependencies..."
-      # Create and activate a virtual environment
-      - python3 -m venv .venv # Create a virtual environment named .venv
-      - source .venv/bin/activate # Activate the virtual environment
-
+      # Create a virtual environment named .venv
+      - python3 -m venv .venv 
+      # Activate the virtual environment using the portable '.' command
+      - . .venv/bin/activate # <--- CHANGE THIS LINE
       # Install Python dependencies into the virtual environment
       - pip install -r requirements.txt
       - echo "Python dependencies installed in virtual environment."
-
       # Deactivate the virtual environment (optional, but good practice in build scripts)
       - deactivate
       
@@ -34,4 +33,4 @@ artifacts:
     - 'scripts/**/*'
     # Include the entire virtual environment directory in the artifact
     - '.venv/**/*' 
-  discard-paths: no # Ensure 'scripts/' and '.venv/' paths are preserved in the artifact
+  discard-paths: no
