@@ -361,7 +361,7 @@ with tab1:
                     st.image(image, caption=f"Preview of {uploaded_file.name}", width=200)
 
                 with col2:
-                    description = st.text_area(f"Description for '{uploaded_file.name}'", key=f"desc_{i}", height=50)
+                    description = st.text_area(f"Description for '{uploaded_file.name}'", key=f"desc_{i}", height=80)
                     photo_details.append({"file": uploaded_file, "description": description})
                 
                 st.markdown("---")
