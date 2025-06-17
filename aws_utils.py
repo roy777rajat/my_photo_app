@@ -90,6 +90,8 @@ def save_metadata_to_dynamodb(dynamodb_table, photo_id, s3_key, s3_url, descript
         print("ERROR: DynamoDB table is not available. Cannot save metadata.")
         return False
     try:
+        t = int(datetime.datetime.now().timestamp() * 1000)
+        photo_id = photo_id + str(t) # Ensure photo_id is unique by appending timestamp
         dynamodb_table.put_item(
             Item={
                 'photo_id': photo_id,
@@ -98,7 +100,7 @@ def save_metadata_to_dynamodb(dynamodb_table, photo_id, s3_key, s3_url, descript
                 'description': description,
                 'original_filename': original_filename,
                 'uploader': uploader,
-                'upload_timestamp': int(datetime.datetime.now().timestamp() * 1000) # Milliseconds since epoch
+                'upload_timestamp': t # Milliseconds since epoch
             }
         )
         return True
