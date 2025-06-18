@@ -320,6 +320,10 @@ if 's3_client' not in st.session_state or 'dynamodb_table' not in st.session_sta
 s3_client = st.session_state.s3_client
 dynamodb_table = st.session_state.dynamodb_table # This might be None if DynamoDB table not found
 
+# --- Initialize session state for upload messages ---
+if 'upload_messages' not in st.session_state:
+    st.session_state.upload_messages = []
+
 
 # --- Header Section ---
 st.title("Family Photo Share App")
@@ -368,6 +372,7 @@ with tab1:
                 st.markdown("---")
 
             if st.button("Upload All Photos"):
+                st.session_state.upload_messages = [] # Clear previous messages on new upload attempt
                 with st.spinner("Uploading photos to AWS... This might take a moment."):
                     success_count = 0
                     for detail in photo_details:
@@ -378,20 +383,33 @@ with tab1:
                             # Only try to save metadata if DynamoDB is available
                             if dynamodb_table:
                                 if save_metadata_to_dynamodb(dynamodb_table, photo_id, s3_key, s3_url, detail['description'], detail['file'].name):
-                                    st.success(f"Uploaded '{detail['file'].name}' successfully! [View on S3]({s3_url})")
+                                    st.session_state.upload_messages.append(f"✅ Uploaded '{detail['file'].name}' successfully! [View on S3]({s3_url})")
                                     success_count += 1
                                 else:
-                                    st.error(f"Failed to save metadata for '{detail['file'].name}'. (DynamoDB might be unavailable)")
+                                    st.session_state.upload_messages.append(f"❌ Failed to save metadata for '{detail['file'].name}'. (DynamoDB might be unavailable)") #
                             else:
-                                st.warning(f"Uploaded '{detail['file'].name}' to S3, but metadata was NOT saved to DynamoDB (table not found). [View on S3]({s3_url})")
+                                st.session_state.upload_messages.append(f"⚠️ Uploaded '{detail['file'].name}' to S3, but metadata was NOT saved to DynamoDB (table not found). [View on S3]({s3_url})")
                                 success_count += 1 # Count S3 upload as success even if no DB
                         else:
-                            st.error(f"Failed to upload '{detail['file'].name}' to S3.")
+                            st.session_state.upload_messages.append(f"❌ Failed to upload '{detail['file'].name}' to S3.")
                     
                     if success_count == len(photo_details) and success_count > 0:
                         st.balloons()
-                    # FIX 2: Changed st.experimental_rerun() to st.rerun()
-                    st.rerun() # Rerun to refresh the view photos tab with new uploads
+                    
+                # Display all accumulated messages after the loop and spinner
+                for msg in st.session_state.upload_messages:
+                    if "✅" in msg:
+                        st.success(msg)
+                    elif "❌" in msg:
+                        st.error(msg)
+                    elif "⚠️" in msg:
+                        st.warning(msg)
+                
+                # Clear messages after displaying them (optional, can keep for user to review)
+                # st.session_state.upload_messages = [] 
+                
+                # FIX 2: Changed st.experimental_rerun() to st.rerun()
+                st.rerun() # Rerun to refresh the view photos tab with new uploads
         else:
             st.info("No files selected yet.")
 
@@ -423,11 +441,9 @@ with tab2:
         # Update selection based on "Select All"
         if select_all_checkbox and not all_selected_on_page:
             st.session_state.selected_photos = list(all_current_ids)
-            # FIX 2: Changed st.experimental_rerun() to st.rerun()
             st.rerun()
         elif not select_all_checkbox and all_selected_on_page:
             st.session_state.selected_photos = []
-            # FIX 2: Changed st.experimental_rerun() to st.rerun()
             st.rerun()
 
 
@@ -458,7 +474,9 @@ with tab2:
                         st.session_state.selected_photos.remove(photo_data['photo_id'])
                     
                     # Display the image from its S3 URL
-                    st.image(photo_data['s3_url'], use_column_width=True, caption=photo_data.get('original_filename', 'N/A'))
+                    # DEPRECATED WARNING: The use_column_width parameter has been deprecated.
+                    # FIX: Change use_column_width to use_container_width
+                    st.image(photo_data['s3_url'], use_container_width=True, caption=photo_data.get('original_filename', 'N/A'))
                     st.write(f"**Desc:** {photo_data.get('description', 'No description')}")
                     
                     try:
@@ -508,7 +526,7 @@ with tab2:
                 label=f"Download {len(st.session_state.selected_photos)} Selected Photos (.zip)",
                 data=zip_buffer,
                 file_name="selected_photos.zip",
-                mime_type="application/zip",
+                mimetype="application/zip", # FIX: Changed from mime_type to mimetype
                 key="download_button_zip"
             )
             st.markdown('</div>', unsafe_allow_html=True)
@@ -547,10 +565,10 @@ st.markdown("""
         <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Logo_of_Twitter.svg" alt="Twitter (X)">
     </a>
     <a href="YOUR_MEDIUM_PROFILE_URL" target="_blank">
-        <img src="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TWVkaXVtPC90aXRsZT48cGF0aCBkPSJNNy40NSAyLjY1bDUuMDUgMTAuN0wxOCAyLjY1aDQuMTV2MTguN0gxOFYxMC4wNWwtNC43IDEwLjdIOU4uNUw0LjUgMTAuMDVWMjEuM0gwVDIuNjVoNy40NXptMTYuNTUgMTguN2gtMy4xNVYyLjY1SDI0djE4Ljd6Ii8+PC9zdmc+" alt="Medium">
+        <img src="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TWVkaXVtPC90aXRsZT48cGF0aCBkPSJNNy40NSAyLjY1bDUuMDUgMTAuN0wxOCAyLjY1aDQuMTV2MTguN0gxOFYxMC4wNWwtNC43IDEwLjdeMDUgMjEuM0gwVDIuNjVoNy40NXptMTYuNTUgMTguN2gtMy4xNVYyLjY1SDI0djE4Ljd6Ii8+PC9zdmc+" alt="Medium">
     </a>
     <a href="YOUR_LINKEDIN_PROFILE_URL" target="_blank">
-        <img src="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TGlua2VkSW48L3RpdGxlPjxwYXRoIGQ9MTAuNDQ3IDIwLjQ1MkgtMy41NTR2LTUuNTY5YzAtMS4zMjUtLjAyOC0zLjA0NC0xLjg1NC0zLjA0NC0xLjg1NSAwLTIuMTM2IDEuNDQ1LTIuMTM2Mi45NXY1LjY2M2gzLjUzNXYxMS4xNTR6Ii8+PC9zdmc+" alt="LinkedIn">
+        <img src="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TGlua2VkSW48L3RpdGxlPjxwYXRoIGQ9Ik0wIDYuNjVoMy41MjV2MTEuMTVoLTMuNTI1di0xMS4xNXptNi45NDYgMEgxMC40NzF2Mi4wNDZoLjAxNGMwLjQyMy0uNzYgMS40NDctMi4wNDYgMy45Ni0yLjA0NiAzLjg2NyAwIDQuNTc5IDIuNTQ4IDQuNTc5IDUuODY2djcuMjgzSDE1LjQ5VjE0LjEzYy0uMDAxLTEuMzA2LS4wMjctMi45NTMtMS42MDctMi45NTMtMS41ODYgMC0xLjgzMiAxLjE4OC0xLjgzMiAyLjg2NHYzLjEwNkg3LjU4OFY2LjY1eiIvPjwvc3ZnPg==" alt="LinkedIn">
     </a>
 </div>
 """, unsafe_allow_html=True)
