@@ -361,6 +361,7 @@ with tab1:
                     st.image(image, caption=f"Preview of {uploaded_file.name}", width=200)
 
                 with col2:
+                    # FIX 1: Changed height from 50 to 80
                     description = st.text_area(f"Description for '{uploaded_file.name}'", key=f"desc_{i}", height=80)
                     photo_details.append({"file": uploaded_file, "description": description})
                 
@@ -389,7 +390,8 @@ with tab1:
                     
                     if success_count == len(photo_details) and success_count > 0:
                         st.balloons()
-                    st.experimental_rerun() # Rerun to refresh the view photos tab with new uploads
+                    # FIX 2: Changed st.experimental_rerun() to st.rerun()
+                    st.rerun() # Rerun to refresh the view photos tab with new uploads
         else:
             st.info("No files selected yet.")
 
@@ -421,10 +423,12 @@ with tab2:
         # Update selection based on "Select All"
         if select_all_checkbox and not all_selected_on_page:
             st.session_state.selected_photos = list(all_current_ids)
-            st.experimental_rerun()
+            # FIX 2: Changed st.experimental_rerun() to st.rerun()
+            st.rerun()
         elif not select_all_checkbox and all_selected_on_page:
             st.session_state.selected_photos = []
-            st.experimental_rerun()
+            # FIX 2: Changed st.experimental_rerun() to st.rerun()
+            st.rerun()
 
 
         # --- Display Photos with Checkboxes ---
@@ -546,7 +550,7 @@ st.markdown("""
         <img src="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TWVkaXVtPC90aXRsZT48cGF0aCBkPSJNNy40NSAyLjY1bDUuMDUgMTAuN0wxOCAyLjY1aDQuMTV2MTguN0gxOFYxMC4wNWwtNC43IDEwLjdIOU4uNUw0LjUgMTAuMDVWMjEuM0gwVDIuNjVoNy40NXptMTYuNTUgMTguN2gtMy4xNVYyLjY1SDI0djE4Ljd6Ii8+PC9zdmc+" alt="Medium">
     </a>
     <a href="YOUR_LINKEDIN_PROFILE_URL" target="_blank">
-        <img src="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TGlua2VkSW48L3RpdGxlPjxwYXRoIGQ9MTAuNDQ3IDIwLjQ1MkgtMy41NTR2LTUuNTY5YzAtMS4zMjUtLjAyOC0zLjA0NC0xLjg1NC0zLjA0NC0xLjg1NSAwLTIuMTM2IDEuNDQ1LTIuMTM2IDIuOTV2NS42NjNoMy41MzV2MTEuMTU0eiIvPjwvc3ZnPg==" alt="LinkedIn">
+        <img src="data:image/svg+xml;base64,PHN2ZyByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TGlua2VkSW48L3RpdGxlPjxwYXRoIGQ9MTAuNDQ3IDIwLjQ1MkgtMy41NTR2LTUuNTY5YzAtMS4zMjUtLjAyOC0zLjA0NC0xLjg1NC0zLjA0NC0xLjg1NSAwLTIuMTM2IDEuNDQ1LTIuMTM2Mi45NXY1LjY2M2gzLjUzNXYxMS4xNTR6Ii8+PC9zdmc+" alt="LinkedIn">
     </a>
 </div>
 """, unsafe_allow_html=True)
