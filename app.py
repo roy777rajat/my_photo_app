@@ -523,11 +523,12 @@ with tab2:
             # Container for centering the download button
             st.markdown('<div class="download-button-container">', unsafe_allow_html=True)
             st.download_button(
-                label=f"Download {len(st.session_state.selected_photos)} Selected Photos (.zip)",
-                data=zip_buffer,
-                file_name="selected_photos.zip",
-                mimetype="application/zip", # FIX: Changed from mime_type to mimetype
-                key="download_button_zip"
+                    label=f"Download {len(st.session_state.selected_photos)} Selected Photos (.zip)",
+                    data=zip_buffer,
+                    file_name="selected_photos.zip",
+                    mime="application/zip", # CHANGE THIS FROM 'mimetype' TO 'mime'
+                    key="download_button_zip",
+                    use_container_width=True # Consider changing from use_column_width if it's there
             )
             st.markdown('</div>', unsafe_allow_html=True)
         else:
