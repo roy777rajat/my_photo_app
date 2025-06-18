@@ -92,18 +92,32 @@ def save_metadata_to_dynamodb(dynamodb_table, photo_id, s3_key, s3_url, descript
     try:
         t = int(datetime.datetime.now().timestamp() * 1000)
         photo_id = photo_id + str(t) # Ensure photo_id is unique by appending timestamp
+        
+        # --- FIX HERE: Ensure description is always a string ---
+        # If description is None, make it an empty string. Otherwise, convert to string.
+        processed_description = str(description) if description is not None else ""
+        # --- END FIX ---
+
         dynamodb_table.put_item(
             Item={
-                'photo_id': photo_id,
+                'user_id': 'anonymous_family_uploads', # Use uploader as user_id --> PK
+                'photo_id': photo_id, # Sort key for DynamoDB
                 's3_key': s3_key, # Store the S3 key for later retrieval
                 's3_url': s3_url,
-                'description': description,
+                'description': processed_description, # Use the explicitly processed description
                 'original_filename': original_filename,
-                'uploader': uploader,
+                'uploader': 'anonymous', # Default uploader
                 'upload_timestamp': t # Milliseconds since epoch
             }
         )
+        print(f"Metadata for {original_filename} saved successfully to DynamoDB.") # Added this print for success feedback
         return True
+    except ClientError as e: # Catch ClientError specifically for more detail
+        error_code = e.response.get("Error", {}).get("Code")
+        error_message = e.response.get("Error", {}).get("Message")
+        print(f"ClientError saving metadata to DynamoDB: [{error_code}] {error_message}")
+        print(f"Full error: {e}")
+        return False
     except Exception as e:
         print(f"Error saving metadata to DynamoDB: {e}")
         return False
